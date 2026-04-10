@@ -158,3 +158,42 @@ macro_rules! trace {
         });
     }};
 }
+
+#[macro_export]
+macro_rules! log {
+    ($msg:expr) => {{
+        use crate::{fatal, error, warn, info, debug, trace};
+        let Message(level, message, prefix) = $msg;
+        match level {
+            MessageLevel::FATAL => {
+                fatal!("{}", message);
+            }
+            MessageLevel::ERROR => {
+                error!("{}", message);
+            }
+            MessageLevel::WARN => {
+                warn!("{}", message);
+            }
+            MessageLevel::INFO => {
+                info!("{}", message);
+            }
+            MessageLevel::DEBUG => {
+                debug!("{}", message);
+            }
+            MessageLevel::TRACE => {
+                trace!("{}", message);
+            }
+            MessageLevel::CUSTOM(_) => {
+                use crate::util::level::{Message, MessageLevel};
+                use crate::MESSAGE_QUEUE;
+                use std::thread;
+                
+                thread::spawn(move || {
+                    let prefix = prefix.unwrap_or(MessageLevel::CUSTOM_PREFIX);
+                    let queue = &MESSAGE_QUEUE.get().unwrap();
+                    queue.lock().unwrap().push(Message(level, message, Some(prefix)));
+                });
+            }
+        }
+    }};
+}
