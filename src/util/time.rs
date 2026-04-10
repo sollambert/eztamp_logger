@@ -1,5 +1,25 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
+pub struct TimeStamp(u128);
+
+impl TimeStamp {
+    pub(crate) fn as_utc(&self) -> String {
+        let (y, m, d, hh, mm, ss, ms) = unix_to_utc(self.millis());
+        format!("{:04}-{:02}-{:02} {:02}:{:02}:{:02}:{:03} UTC", y, m, d, hh, mm, ss, ms)
+    }
+
+    pub(crate) fn now() -> Self {
+        Self(SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis())
+    }
+
+    pub(crate) fn millis(&self) -> u128 {
+        self.0
+    }
+}
+
 pub(crate) fn is_leap_year(year: i64) -> bool {
     (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
 }
@@ -63,15 +83,4 @@ pub(crate) fn unix_to_utc(mut ts: u128) -> (i64, u32, u32, u32, u32, u32, u32) {
         second as u32,
         millis as u32
     )
-}
-
-pub(crate) fn utc_timestamp() -> String {
-    let ts = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_millis();
-
-    let (y, m, d, hh, mm, ss, ms) = unix_to_utc(ts);
-
-    format!("{:04}-{:02}-{:02} {:02}:{:02}:{:02}:{:03} UTC", y, m, d, hh, mm, ss, ms)
 }
