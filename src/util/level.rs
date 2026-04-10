@@ -1,8 +1,9 @@
-pub struct Message<'a>(pub MessageLevel, pub &'a str, pub Option<&'a str>);
+#[derive(Clone)]
+pub struct Message<'a>(pub MessageLevel, pub String, pub Option<&'a str>);
 
 impl Message<'_> {
-    pub fn is_suppressed(&self) -> bool {
-        self.0.is_suppressed()
+    pub fn is_suppressed(&self, log_level: u16) -> bool {
+        self.0.is_suppressed(log_level)
     }
 
     pub fn prefix(&self) -> &str {
@@ -15,11 +16,6 @@ impl Message<'_> {
             MessageLevel::TRACE => MessageLevel::TRACE_PREFIX,
             MessageLevel::CUSTOM(_) => self.2.unwrap_or(MessageLevel::CUSTOM_PREFIX),
         }
-    }
-
-    pub fn log(&self) {
-        use crate::log;
-        log!(self)
     }
 }
 
@@ -48,7 +44,7 @@ impl MessageLevel {
 pub struct LogLevel(pub u16);
 
 impl LogLevel {
-    const FATAL: u16 = 0;
+    const FATAL: u16 = 1;
     const ERROR: u16 = 100;
     const WARN: u16 = 200;
     const INFO: u16 = 300;
@@ -93,10 +89,8 @@ impl MessageLevel {
         }
     }
 
-    pub(crate) fn is_suppressed(&self) -> bool {
-        if let Some(log_level) = crate::LOG_LEVEL.get() {
-            return *log_level <= self.as_u16()
-        } else {return false}
+    pub(crate) fn is_suppressed(&self, log_level: u16) -> bool {
+        return log_level < self.as_u16();
     }
 }
 
