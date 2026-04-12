@@ -1,6 +1,6 @@
 use std::{env, fs::OpenOptions, sync::{Arc, Mutex, OnceLock}, thread};
 
-use crate::{logger::Logger, message::Message};
+use crate::{logger::Logger, message::{Message, level::LogLevel}};
 
 pub mod logger;
 pub mod message;
@@ -28,15 +28,15 @@ impl LogDestination {
 pub fn init() {
     let rust_log = env::var("RUST_LOG").unwrap_or_default();
     let log_level = match rust_log.to_ascii_uppercase().as_str() {
-        "TRACE" => 500,
-        "DEBUG" => 400,
-        "INFO" => 300,
-        "WARN" => 200,
-        "ERROR" => 100,
-        "FATAL" => 1,
+        "TRACE" => LogLevel::trace(),
+        "DEBUG" => LogLevel::debug(),
+        "INFO" => LogLevel::info(),
+        "WARN" => LogLevel::warn(),
+        "ERROR" => LogLevel::error(),
+        "FATAL" => LogLevel::fatal(),
         "NONE" => 0,
-        "" => 300,
-        _ =>  u16::from_str_radix(&env::var("RUST_LOG").unwrap_or_default(), 10).unwrap_or(300)
+        "" => LogLevel::info(),
+        _ =>  u16::from_str_radix(&env::var("RUST_LOG").unwrap_or_default(), 10).unwrap_or(LogLevel::info())
     };
     let salt = env::var("RUST_LOG_SALT").unwrap_or_default();
     let destination: u8 = u8::from_str_radix(&env::var("RUST_LOG_DESTINATION").unwrap_or_default(), 2).unwrap_or(LogDestination::Default.bits());
