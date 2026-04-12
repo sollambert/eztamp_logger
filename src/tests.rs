@@ -6,6 +6,7 @@ mod tests {
 
     #[test]
     fn all() {
+        let _ = dotenv::dotenv();
         crate::init();
         fatal!("This is a fatal error!");
         error!("This is an error!");
@@ -18,6 +19,7 @@ mod tests {
 
     #[test]
     fn custom() {
+        let _ = dotenv::dotenv();
         crate::init();
         let message = Message::new(MessageLevel::CUSTOM(320), "This is a custom message!".to_string(), MessagePrefix::custom_prefix("TEST"));
         log!(message);
@@ -27,21 +29,20 @@ mod tests {
 
 #[cfg(test)]
 mod validator {
-    use std::{fs::OpenOptions, io::Read};
+    use std::{env, fs::OpenOptions, io::Read};
     use sha2::{Digest, Sha256};
     
     #[test]
     fn validate() {
+        let _ = dotenv::dotenv();
+        let salt = env::var("RUST_LOG_SALT").unwrap_or_default();
+        println!("{}", salt);
         let mut file = OpenOptions::new()
             .read(true)
             .open("./log.txt").unwrap();
         let mut content = String::new();
-        match file.read_to_string(&mut content) {
-            Ok(bytes) => println!("read ({}) bytes", bytes),
-            Err(err) => println!("could not read file: {}", err.to_string()),
-        }
+        let _ = file.read_to_string(&mut content);
         let mut line_index = 0;
-        println!("contents: {}", content);
         for line in content.lines() {
             let mut hasher = Sha256::new();
             let mut parts = line.split(";");
@@ -59,6 +60,7 @@ mod validator {
                     }
                     prev_checksum.push(new_char);
                 }
+                hasher.update(&salt);
                 hasher.update(prev_checksum.iter().collect::<String>());
                 hasher.update(format!("{};{};{}", timestamp, prefix, message));
                 let digest = hasher.finalize();
@@ -69,6 +71,7 @@ mod validator {
                 println!("({}) | {} | {}", line_index + 1, checksum, hex_string);
                 assert_eq!(checksum, hex_string);
             } else {
+                hasher.update(&salt);
                 hasher.update(format!("{};{};{}", timestamp, prefix, message));
                 let digest = hasher.finalize();
                 let hex_string: String = digest

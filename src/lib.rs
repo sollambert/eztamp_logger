@@ -26,9 +26,22 @@ impl LogDestination {
 }
 
 pub fn init() {
-    let log_level: u16 = u16::from_str_radix(&env::var("EZENV_LOG_LEVEL").unwrap_or_default(), 10).unwrap_or(500);
-    let destination: u8 = u8::from_str_radix(&env::var("EZENV_LOG_DESTINATION").unwrap_or_default(), 2).unwrap_or(LogDestination::Default.bits());
-    let output_path = env::var("EZENV_OUTPUT_FILE").unwrap_or("./log.txt".to_string());
+    let rust_log = env::var("RUST_LOG").unwrap_or_default();
+    let log_level = match rust_log.to_ascii_uppercase().as_str() {
+        "TRACE" => 500,
+        "DEBUG" => 400,
+        "INFO" => 300,
+        "WARN" => 200,
+        "ERROR" => 100,
+        "FATAL" => 1,
+        "NONE" => 0,
+        "" => 300,
+        _ =>  u16::from_str_radix(&env::var("RUST_LOG").unwrap_or_default(), 10).unwrap_or(300)
+    };
+    let salt = env::var("RUST_LOG_SALT").unwrap_or_default();
+    println!("{}", salt);
+    let destination: u8 = u8::from_str_radix(&env::var("RUST_LOG_DESTINATION").unwrap_or_default(), 2).unwrap_or(LogDestination::Default.bits());
+    let output_path = env::var("RUST_LOG_OUTPUT_FILE").unwrap_or("./log.txt".to_string());
     let file = match OpenOptions::new()
         .create(true)
         .append(true)
@@ -40,6 +53,7 @@ pub fn init() {
         destination,
         log_level,
         file,
+        salt
     };
     let _ = MESSAGE_QUEUE.set(Arc::new(Mutex::new(Vec::new())));
     match LOGGER.set(Arc::new(Mutex::new(logger))) {

@@ -11,7 +11,8 @@ use crate::message::level::MessageLevel;
 pub(crate) struct Logger {
     pub(crate) file: Option<File>,
     pub(crate) destination: u8,
-    pub(crate) log_level: u16
+    pub(crate) log_level: u16,
+    pub(crate) salt: String
 }
 
 impl Logger {
@@ -71,6 +72,7 @@ impl Logger {
                         }
                         let prev_checksum = buff.iter().collect::<String>();
                         let mut hasher = Sha256::new();
+                        hasher.update(self.salt.clone());
                         hasher.update(prev_checksum.as_bytes());
                         hasher.update(message_string.clone());
                         let digest = hasher.finalize();
