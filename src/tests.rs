@@ -36,10 +36,11 @@ mod validator {
     fn validate() {
         let _ = dotenv::dotenv();
         let salt = env::var("RUST_LOG_SALT").unwrap_or_default();
+        let output_path = env::var("RUST_LOG_OUTPUT_FILE").unwrap_or("./log.txt".to_string());
         println!("{}", salt);
         let mut file = OpenOptions::new()
             .read(true)
-            .open("./log.txt").unwrap();
+            .open(output_path).unwrap();
         let mut content = String::new();
         let _ = file.read_to_string(&mut content);
         let mut line_index = 0;
