@@ -21,7 +21,7 @@ RUST_LOG_OUTPUT_FILE="./log.txt" # default = "./log.txt"
 # StdOut = 0100
 # StdErr = 0010
 # Default = 1001
-# By default file loggins is enabled, and Fatal and Error messages are piped to stderr with all other levels piping to stdout
+# By default file logging is enabled, and Fatal and Error messages are piped to stderr with all other levels piping to stdout
 RUST_LOG_DESTINATION=1001 # default = 1001
 ```
 
