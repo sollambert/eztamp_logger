@@ -37,7 +37,6 @@ mod validator {
         let _ = dotenv::dotenv();
         let salt = env::var("RUST_LOG_SALT").unwrap_or_default();
         let output_path = env::var("RUST_LOG_OUTPUT_FILE").unwrap_or("./log.txt".to_string());
-        println!("{}", salt);
         let mut file = OpenOptions::new()
             .read(true)
             .open(output_path).unwrap();

@@ -39,7 +39,6 @@ pub fn init() {
         _ =>  u16::from_str_radix(&env::var("RUST_LOG").unwrap_or_default(), 10).unwrap_or(300)
     };
     let salt = env::var("RUST_LOG_SALT").unwrap_or_default();
-    println!("{}", salt);
     let destination: u8 = u8::from_str_radix(&env::var("RUST_LOG_DESTINATION").unwrap_or_default(), 2).unwrap_or(LogDestination::Default.bits());
     let output_path = env::var("RUST_LOG_OUTPUT_FILE").unwrap_or("./log.txt".to_string());
     let file = match OpenOptions::new()
