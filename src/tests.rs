@@ -2,7 +2,7 @@
 mod tests {
     use std::time::Duration;
 
-    use crate::{debug, error, fatal, info, log, trace, util::level::{Message, MessageLevel}, warn};
+    use crate::{debug, error, fatal, info, log, message::{Message, MessagePrefix, level::MessageLevel}, trace, warn};
 
     #[test]
     fn all() {
@@ -19,7 +19,7 @@ mod tests {
     #[test]
     fn custom() {
         crate::init();
-        let message = Message(MessageLevel::CUSTOM(320), "This is a custom message!".to_string(), Some("TEST"));
+        let message = Message::new(MessageLevel::CUSTOM(320), "This is a custom message!".to_string(), MessagePrefix::custom_prefix("TEST"));
         log!(message);
         std::thread::sleep(Duration::new(0, 250000));
     }

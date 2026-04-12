@@ -1,23 +1,4 @@
-#[derive(Clone)]
-pub struct Message<'a>(pub MessageLevel, pub String, pub Option<&'a str>);
 
-impl Message<'_> {
-    pub fn is_suppressed(&self, log_level: u16) -> bool {
-        self.0.is_suppressed(log_level)
-    }
-
-    pub fn prefix(&self) -> &str {
-        match self.0 {
-            MessageLevel::FATAL => MessageLevel::FATAL_PREFIX,
-            MessageLevel::ERROR => MessageLevel::ERROR_PREFIX,
-            MessageLevel::WARN => MessageLevel::WARN_PREFIX,
-            MessageLevel::INFO => MessageLevel::INFO_PREFIX,
-            MessageLevel::DEBUG => MessageLevel::DEBUG_PREFIX,
-            MessageLevel::TRACE => MessageLevel::TRACE_PREFIX,
-            MessageLevel::CUSTOM(_) => self.2.unwrap_or(MessageLevel::CUSTOM_PREFIX),
-        }
-    }
-}
 
 #[repr(u16)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -29,16 +10,6 @@ pub enum MessageLevel {
     DEBUG = LogLevel::DEBUG,
     TRACE = LogLevel::TRACE,
     CUSTOM(u16)
-}
-
-impl MessageLevel {
-    pub(crate) const FATAL_PREFIX: &str = "\x1b[31mFATAL\x1b[0m";
-    pub(crate) const ERROR_PREFIX: &str = "\x1b[31mERROR\x1b[0m";
-    pub(crate) const WARN_PREFIX: &str = "\x1b[33mWARN\x1b[0m";
-    pub(crate) const DEBUG_PREFIX: &str = "\x1b[34mDEBUG\x1b[0m";
-    pub(crate) const INFO_PREFIX: &str = "\x1b[32mINFO\x1b[0m";
-    pub(crate) const TRACE_PREFIX: &str = "\x1b[90mTRACE\x1b[0m";
-    pub(crate) const CUSTOM_PREFIX: &str = "\x1b[90mCUSTOM\x1b[0m";
 }
 
 pub struct LogLevel(pub u16);

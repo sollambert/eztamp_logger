@@ -1,6 +1,9 @@
 use std::io::Write;
 use std::fs::File;
-use crate::{LogDestination, util::{level::{Message, MessageLevel}, time::TimeStamp}};
+
+use crate::LogDestination;
+use crate::message::Message;
+use crate::message::level::MessageLevel;
 
 #[derive(Debug)]
 pub(crate) struct Logger {
@@ -27,84 +30,32 @@ impl Logger {
     }
 
     pub(crate) fn log(&self, message: Message) {
-        let prefix: &str = message.prefix();
-        let level = message.0;
-        let msg = message.1.clone();
-        let timestamp = TimeStamp::now();
+        let level = message.level();
 
         if !level.is_suppressed(self.log_level) {
             match level {
-                MessageLevel::FATAL => {
+                MessageLevel::FATAL | MessageLevel::ERROR => {
                     if self.is_default() || self.is_std_err() {
-                        eprintln!("[{}][{}]: {}", timestamp.as_utc(), prefix, msg);
+                        eprintln!("{}", message.to_display_string());
                     }
                     if self.is_std_out() {
-                        println!("[{}][{}]: {}", timestamp.as_utc(), prefix, msg);
+                        println!("{}", message.to_display_string());
                     }
                 },
-                MessageLevel::ERROR => {
-                    if self.is_default() || self.is_std_err() {
-                        eprintln!("[{}][{}]: {}", timestamp.as_utc(), prefix, msg);
-                    }
-                    if self.is_std_out() {
-                        println!("[{}][{}]: {}", timestamp.as_utc(), prefix, msg);
-                    }
-                },
-                MessageLevel::WARN => {
+                MessageLevel::WARN | MessageLevel::INFO | MessageLevel::DEBUG | MessageLevel::TRACE | MessageLevel::CUSTOM(_) => {
                     if self.is_std_err() {
-                        eprintln!("[{}][{}]: {}", timestamp.as_utc(), prefix, msg);
+                        eprintln!("{}", message.to_display_string());
                     }
                     if self.is_default() || self.is_std_out() {
-                        println!("[{}][{}]: {}", timestamp.as_utc(), prefix, msg);
-                    }
-                },
-                MessageLevel::INFO => {
-                    if self.is_std_err() {
-                        eprintln!("[{}][{}]: {}", timestamp.as_utc(), prefix, msg);
-                    }
-                    if self.is_default() || self.is_std_out() {
-                        println!("[{}][{}]: {}", timestamp.as_utc(), prefix, msg);
-                    }
-                },
-                MessageLevel::DEBUG => {
-                    if self.is_std_err() {
-                        eprintln!("[{}][{}]: {}", timestamp.as_utc(), prefix, msg);
-                    }
-                    if self.is_default() || self.is_std_out() {
-                        println!("[{}][{}]: {}", timestamp.as_utc(), prefix, msg);
-                    }
-                },
-                MessageLevel::TRACE => {
-                    if self.is_std_err() {
-                        eprintln!("[{}][{}]: {}", timestamp.as_utc(), prefix, msg);
-                    }
-                    if self.is_default() || self.is_std_out() {
-                        println!("[{}][{}]: {}", timestamp.as_utc(), prefix, msg);
-                    }
-                },
-                MessageLevel::CUSTOM(v) => {
-                    if self.is_std_err() {
-                        eprintln!("[{}][{}({})]: {}", timestamp.as_utc(), prefix, v, msg);
-                    }
-                    if self.is_default() || self.is_std_out() {
-                        println!("[{}][{}({})]: {}", timestamp.as_utc(), prefix, v, msg);
+                        println!("{}", message.to_display_string());
                     }
                 }
             }
 
             if self.file_logging() {
-                let prefix = match level {
-                    MessageLevel::FATAL => "FATAL",
-                    MessageLevel::ERROR => "ERROR",
-                    MessageLevel::WARN => "WARN",
-                    MessageLevel::INFO => "INFO",
-                    MessageLevel::DEBUG => "DEBUG",
-                    MessageLevel::TRACE => "TRACE",
-                    MessageLevel::CUSTOM(_) => message.2.unwrap_or("CUSTOM"),
-                };
                 if let Some(file) = &self.file {
                     let mut file = file;
-                    let _ = writeln!(file, "{};{};{}", timestamp.as_utc(), prefix, msg);
+                    let _ = writeln!(file, "{}", message.to_string());
                 }
             }
         }
