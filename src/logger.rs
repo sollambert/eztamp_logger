@@ -1,5 +1,7 @@
-use std::io::Write;
 use std::fs::File;
+use std::io::{Read, Seek, SeekFrom, Write};
+
+use sha2::{Digest, Sha256};
 
 use crate::LogDestination;
 use crate::message::Message;
@@ -55,9 +57,55 @@ impl Logger {
             if self.file_logging() {
                 if let Some(file) = &self.file {
                     let mut file = file;
-                    let _ = writeln!(file, "{}", message.to_string());
+                    let _lock = file.lock();
+                    let cloned = (*file).try_clone();
+                    let message_string = message.to_string();
+                    if let Ok(new_file) = cloned {
+                        let last_line = match read_last_line(new_file) {
+                            Ok(line) => line,
+                            Err(_) => String::new(),
+                        };
+                        let mut buff = Vec::<char>::new();
+                        for new_char in last_line.chars() {
+                            if new_char == ';' {break;} else {buff.push(new_char)}
+                        }
+                        let prev_checksum = buff.iter().collect::<String>();
+                        let mut hasher = Sha256::new();
+                        hasher.update(prev_checksum.as_bytes());
+                        hasher.update(message_string.clone());
+                        let digest = hasher.finalize();
+                        let hex_string: String = digest
+                            .iter()
+                            .map(|b| format!("{:02x}", b))
+                            .collect();
+                        let _ = writeln!(file, "{};{}", hex_string, message_string);
+                    } else {
+                        let _ = writeln!(file, "{}", message_string);
+                    }
                 }
             }
         }
     }
+}
+
+fn read_last_line(mut file: File) -> Result<String, std::io::Error> {
+    let mut pos = file.seek(SeekFrom::End(0))?;
+    let mut buf = Vec::new();
+
+    while pos > 0 {
+        pos -= 1;
+        file.seek(SeekFrom::Start(pos))?;
+
+        let mut byte = [0];
+        file.read_exact(&mut byte)?;
+
+        if byte[0] == b'\n' && !buf.is_empty() {
+            break;
+        }
+
+        buf.push(byte[0]);
+    }
+
+    buf.reverse();
+    Ok(String::from_utf8_lossy(&buf).to_string())
 }
