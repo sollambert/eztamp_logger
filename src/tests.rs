@@ -14,7 +14,7 @@ mod tests {
         info!("This is an info message!");
         debug!("This is a debug message!");
         trace!("This is a trace message!");
-        std::thread::sleep(Duration::new(1, 0));
+        std::thread::sleep(Duration::new(0, 10_000_000));
     }
 
     #[test]
@@ -23,7 +23,7 @@ mod tests {
         crate::init();
         let message = Message::new(MessageLevel::CUSTOM(320), "This is a custom message!".to_string(), MessagePrefix::custom_prefix("TEST"));
         log!(message);
-        std::thread::sleep(Duration::new(0, 250000));
+        std::thread::sleep(Duration::new(0, 10_000_000));
     }
 }
 

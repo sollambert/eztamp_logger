@@ -63,16 +63,14 @@ pub fn init() {
         },
         Err(_) => eprintln!("Logger already initialized!"),
     };
-    thread::spawn(move || {
-        loop {
-            let mut queue = MESSAGE_QUEUE.get().unwrap().lock().unwrap();
-            let mut logger = LOGGER.get().unwrap().lock().unwrap();
-            let mut iter = queue.clone().into_iter();
-            while let Some(message) = iter.next() {
-                logger.log(message);
-            }
-            queue.clear();
-        }
+    thread::spawn(move || loop {
+        let mut queue = MESSAGE_QUEUE.get().unwrap().lock().unwrap();
+        let mut logger = LOGGER.get().unwrap().lock().unwrap();
+        let iter = queue.clone().into_iter();
+        iter.for_each(|message| {
+            logger.log(message);
+        });
+        queue.clear();
     });
 }
 
@@ -81,14 +79,10 @@ macro_rules! fatal {
     ( $( $arg:tt )* ) => {{
         use crate::message::{Message, MessagePrefix, level::MessageLevel};
         use crate::MESSAGE_QUEUE;
-        use std::thread;
-        
-        thread::spawn(move || {
-            let queue = &MESSAGE_QUEUE.get().unwrap();
-            let msg = format!($($arg)*);
-            let message = Message::new(MessageLevel::FATAL, msg, MessagePrefix::FATAL_PREFIX);
-            queue.lock().unwrap().push(message);
-        });
+        let queue = &MESSAGE_QUEUE.get().unwrap();
+        let msg = format!($($arg)*);
+        let message = Message::new(MessageLevel::FATAL, msg, MessagePrefix::FATAL_PREFIX);
+        queue.lock().unwrap().push(message);
     }};
 }
 
@@ -97,14 +91,10 @@ macro_rules! error {
     ( $( $arg:tt )* ) => {{
         use crate::message::{Message, MessagePrefix, level::MessageLevel};
         use crate::MESSAGE_QUEUE;
-        use std::thread;
-        
-        thread::spawn(move || {
-            let queue = &MESSAGE_QUEUE.get().unwrap();
-            let msg = format!($($arg)*);
-            let message = Message::new(MessageLevel::ERROR, msg, MessagePrefix::ERROR_PREFIX);
-            queue.lock().unwrap().push(message);
-        });
+        let queue = &MESSAGE_QUEUE.get().unwrap();
+        let msg = format!($($arg)*);
+        let message = Message::new(MessageLevel::ERROR, msg, MessagePrefix::ERROR_PREFIX);
+        queue.lock().unwrap().push(message);
     }};
 }
 
@@ -113,14 +103,10 @@ macro_rules! warn {
     ( $( $arg:tt )* ) => {{
         use crate::message::{Message, MessagePrefix, level::MessageLevel};
         use crate::MESSAGE_QUEUE;
-        use std::thread;
-        
-        thread::spawn(move || {
-            let queue = &MESSAGE_QUEUE.get().unwrap();
-            let msg = format!($($arg)*);
-            let message = Message::new(MessageLevel::WARN, msg, MessagePrefix::WARN_PREFIX);
-            queue.lock().unwrap().push(message);
-        });
+        let queue = &MESSAGE_QUEUE.get().unwrap();
+        let msg = format!($($arg)*);
+        let message = Message::new(MessageLevel::WARN, msg, MessagePrefix::WARN_PREFIX);
+        queue.lock().unwrap().push(message);
     }};
 }
 
@@ -129,14 +115,10 @@ macro_rules! info {
     ( $( $arg:tt )* ) => {{
         use crate::message::{Message, MessagePrefix, level::MessageLevel};
         use crate::MESSAGE_QUEUE;
-        use std::thread;
-        
-        thread::spawn(move || {
-            let queue = &MESSAGE_QUEUE.get().unwrap();
-            let msg = format!($($arg)*);
-            let message = Message::new(MessageLevel::INFO, msg, MessagePrefix::INFO_PREFIX);
-            queue.lock().unwrap().push(message);
-        });
+        let queue = &MESSAGE_QUEUE.get().unwrap();
+        let msg = format!($($arg)*);
+        let message = Message::new(MessageLevel::INFO, msg, MessagePrefix::INFO_PREFIX);
+        queue.lock().unwrap().push(message);
     }};
 }
 
@@ -145,14 +127,10 @@ macro_rules! debug {
     ( $( $arg:tt )* ) => {{
         use crate::message::{Message, MessagePrefix, level::MessageLevel};
         use crate::MESSAGE_QUEUE;
-        use std::thread;
-        
-        thread::spawn(move || {
-            let queue = &MESSAGE_QUEUE.get().unwrap();
-            let msg = format!($($arg)*);
-            let message = Message::new(MessageLevel::DEBUG, msg, MessagePrefix::DEBUG_PREFIX);
-            queue.lock().unwrap().push(message);
-        });
+        let queue = &MESSAGE_QUEUE.get().unwrap();
+        let msg = format!($($arg)*);
+        let message = Message::new(MessageLevel::DEBUG, msg, MessagePrefix::DEBUG_PREFIX);
+        queue.lock().unwrap().push(message);
     }};
 }
 
@@ -161,14 +139,10 @@ macro_rules! trace {
     ( $( $arg:tt )* ) => {{
         use crate::message::{Message, MessagePrefix, level::MessageLevel};
         use crate::MESSAGE_QUEUE;
-        use std::thread;
-        
-        thread::spawn(move || {
-            let queue = &MESSAGE_QUEUE.get().unwrap();
-            let msg = format!($($arg)*);
-            let message = Message::new(MessageLevel::TRACE, msg, MessagePrefix::TRACE_PREFIX);
-            queue.lock().unwrap().push(message);
-        });
+        let queue = &MESSAGE_QUEUE.get().unwrap();
+        let msg = format!($($arg)*);
+        let message = Message::new(MessageLevel::TRACE, msg, MessagePrefix::TRACE_PREFIX);
+        queue.lock().unwrap().push(message);
     }};
 }
 
@@ -199,12 +173,8 @@ macro_rules! log {
             MessageLevel::CUSTOM(_) => {
                 use crate::message::{Message};
                 use crate::MESSAGE_QUEUE;
-                use std::thread;
-                
-                thread::spawn(move || {
-                    let queue = &MESSAGE_QUEUE.get().unwrap();
-                    queue.lock().unwrap().push(Message::new(level, message, prefix));
-                });
+                let queue = &MESSAGE_QUEUE.get().unwrap();
+                queue.lock().unwrap().push(Message::new(level, message, prefix));
             }
         }
     }};
