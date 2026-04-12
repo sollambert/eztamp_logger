@@ -32,7 +32,7 @@ impl Logger {
         return self.destination & LogDestination::File.bits() != 0;
     }
 
-    pub(crate) fn log(&self, message: Message) {
+    pub(crate) fn log(&mut self, message: Message) {
         let level = message.level();
 
         if !level.is_suppressed(self.log_level) {
@@ -56,41 +56,34 @@ impl Logger {
             }
 
             if self.file_logging() {
-                if let Some(file) = &self.file {
-                    let mut file = file;
-                    let _lock = file.lock();
-                    let cloned = (*file).try_clone();
-                    let message_string = message.to_string();
-                    if let Ok(new_file) = cloned {
-                        let last_line = match read_last_line(new_file) {
-                            Ok(line) => line,
-                            Err(_) => String::new(),
-                        };
-                        let mut buff = Vec::<char>::new();
-                        for new_char in last_line.chars() {
-                            if new_char == ';' {break;} else {buff.push(new_char)}
-                        }
-                        let prev_checksum = buff.iter().collect::<String>();
-                        let mut hasher = Sha256::new();
-                        hasher.update(self.salt.clone());
-                        hasher.update(prev_checksum.as_bytes());
-                        hasher.update(message_string.clone());
-                        let digest = hasher.finalize();
-                        let hex_string: String = digest
-                            .iter()
-                            .map(|b| format!("{:02x}", b))
-                            .collect();
-                        let _ = writeln!(file, "{};{}", hex_string, message_string);
-                    } else {
-                        let _ = writeln!(file, "{}", message_string);
-                    }
+                let message_string = message.to_string();
+                let file = self.file.as_mut().unwrap();
+                let _lock = file.lock();
+                let last_line = match read_last_line(&file) {
+                    Ok(line) => line,
+                    Err(_) => String::new(),
+                };
+                let mut buff = Vec::<char>::new();
+                for new_char in last_line.chars() {
+                    if new_char == ';' {break;} else {buff.push(new_char)}
                 }
+                let prev_checksum = buff.iter().collect::<String>();
+                let mut hasher = Sha256::new();
+                hasher.update(&self.salt);
+                hasher.update(prev_checksum.as_bytes());
+                hasher.update(message_string.clone());
+                let digest = hasher.finalize();
+                let hex_string: String = digest
+                    .iter()
+                    .map(|b| format!("{:02x}", b))
+                    .collect();
+                let _ = writeln!(file, "{};{}", hex_string, message_string);
             }
         }
     }
 }
 
-fn read_last_line(mut file: File) -> Result<String, std::io::Error> {
+fn read_last_line(mut file: &File) -> Result<String, std::io::Error> {
     let mut pos = file.seek(SeekFrom::End(0))?;
     let mut buf = Vec::new();
 

@@ -42,8 +42,9 @@ pub fn init() {
     let destination: u8 = u8::from_str_radix(&env::var("RUST_LOG_DESTINATION").unwrap_or_default(), 2).unwrap_or(LogDestination::Default.bits());
     let output_path = env::var("RUST_LOG_OUTPUT_FILE").unwrap_or("./log.txt".to_string());
     let file = match OpenOptions::new()
-        .create(true)
+        .read(true)
         .append(true)
+        .create(true)
         .open(output_path.clone()) {
             Ok(file) => Some(file),
             Err(_) => None
@@ -65,14 +66,12 @@ pub fn init() {
     thread::spawn(move || {
         loop {
             let mut queue = MESSAGE_QUEUE.get().unwrap().lock().unwrap();
-            if queue.len() > 0 {
-                let logger = LOGGER.get().unwrap().lock().unwrap();
-                let mut iter = queue.clone().into_iter();
-                while let Some(message) = iter.next() {
-                    logger.log(message);
-                }
-                queue.clear();
+            let mut logger = LOGGER.get().unwrap().lock().unwrap();
+            let mut iter = queue.clone().into_iter();
+            while let Some(message) = iter.next() {
+                logger.log(message);
             }
+            queue.clear();
         }
     });
 }

@@ -14,7 +14,7 @@ mod tests {
         info!("This is an info message!");
         debug!("This is a debug message!");
         trace!("This is a trace message!");
-        std::thread::sleep(Duration::new(0, 250000));
+        std::thread::sleep(Duration::new(1, 0));
     }
 
     #[test]
@@ -50,18 +50,18 @@ mod validator {
             let timestamp = parts.next().unwrap();
             let prefix = parts.next().unwrap();
             let message = parts.next().unwrap();
-
             if line_index != 0 {
                 let prev_message = content.lines().nth(line_index - 1).unwrap();
-                let mut prev_checksum = Vec::<char>::new();
+                let mut pref_checksum_buf = Vec::<char>::new();
                 for new_char in prev_message.chars() {
-                    if new_char != ';' {
+                    if new_char == ';' {
                         break;
                     }
-                    prev_checksum.push(new_char);
+                    pref_checksum_buf.push(new_char);
                 }
+                let prev_checksum = pref_checksum_buf.iter().collect::<String>();
                 hasher.update(&salt);
-                hasher.update(prev_checksum.iter().collect::<String>());
+                hasher.update(prev_checksum);
                 hasher.update(format!("{};{};{}", timestamp, prefix, message));
                 let digest = hasher.finalize();
                 let hex_string: String = digest
