@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+curl = "0.4.49"
 hmac = "0.13.0"
 sha2 = "0.11.0"
 
