@@ -38,7 +38,7 @@ pub fn init() {
         "" => LogLevel::info(),
         _ =>  u16::from_str_radix(&env::var("RUST_LOG").unwrap_or_default(), 10).unwrap_or(LogLevel::info())
     };
-    let salt = env::var("RUST_LOG_SALT").unwrap_or_default();
+    let secret = env::var("RUST_LOG_SECRET").unwrap_or_default();
     let destination: u8 = u8::from_str_radix(&env::var("RUST_LOG_DESTINATION").unwrap_or_default(), 2).unwrap_or(LogDestination::Default.bits());
     let output_path = env::var("RUST_LOG_OUTPUT_FILE").unwrap_or("./log.txt".to_string());
     let file = match OpenOptions::new()
@@ -53,7 +53,7 @@ pub fn init() {
         destination,
         log_level,
         file,
-        salt
+        secret
     };
     let _ = MESSAGE_QUEUE.set(Arc::new(Mutex::new(Vec::new())));
     match LOGGER.set(Arc::new(Mutex::new(logger))) {
@@ -143,7 +143,9 @@ macro_rules! trace {
 macro_rules! log {
     ($msg:expr) => {{
         use crate::{fatal, error, warn, info, debug, trace};
-        let Message(level, message, prefix) = $msg;
+        let level = $msg.level();
+        let message = $msg.text();
+        let prefix = $msg.prefix();
         match level {
             MessageLevel::FATAL => {
                 fatal!("{}", message);

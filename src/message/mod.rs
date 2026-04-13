@@ -3,40 +3,42 @@ use crate::{message::level::MessageLevel, util::time::TimeStamp};
 pub mod level;
 
 #[derive(Clone)]
-pub struct Message(pub(crate) MessageLevel, pub(crate) String, pub(crate) MessagePrefix);
+pub struct Message(TimeStamp, pub(crate) MessageLevel, pub(crate) String, pub(crate) MessagePrefix);
 
 impl Message {
     pub fn new(level: MessageLevel, text: String, prefix: MessagePrefix) -> Self {
-        Self(level, text, prefix)
+        Self(TimeStamp::now(), level, text, prefix)
     }
 
     pub fn level(&self) -> MessageLevel {
-        self.0
+        self.1
     }
 
     pub fn text(&self) -> String {
-        self.1.clone()
-    }
-
-    pub fn prefix(&self) -> MessagePrefix {
         self.2.clone()
     }
 
+    pub fn timestamp(&self) -> TimeStamp {
+        self.0
+    }
+
+    pub fn prefix(&self) -> MessagePrefix {
+        self.3.clone()
+    }
+
     pub fn is_suppressed(&self, log_level: u16) -> bool {
-        self.0.is_suppressed(log_level)
+        self.1.is_suppressed(log_level)
     }
 
     pub fn to_display_string(&self) -> String {
-        let timestamp = TimeStamp::now();
         match self.level() {
-            MessageLevel::CUSTOM(v) => format!("[{}][{}({})]: {}", timestamp.as_utc(), &self.prefix().to_string(), v, self.text()),
-            _ => format!("[{}][{}]: {}", timestamp.as_utc(), &self.prefix().to_string(), self.text())
+            MessageLevel::CUSTOM(v) => format!("[{}][{}({})]: {}", &self.timestamp().as_utc(), &self.prefix().to_string(), v, self.text()),
+            _ => format!("[{}][{}]: {}", &self.timestamp().as_utc(), &self.prefix().to_string(), self.text())
         }
     }
 
     pub fn to_string(&self) -> String {
-        let timestamp = TimeStamp::now();
-        format!("{};{};{}", timestamp.as_utc(), &self.prefix().text, self.text())
+        format!("{};{};{}", &self.timestamp().as_utc(), &self.prefix().text, self.text())
     }
 }
 

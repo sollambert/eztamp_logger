@@ -84,3 +84,22 @@ impl From<LogLevel> for MessageLevel {
         Self::from(value.0)
     }
 }
+
+impl From<&str> for MessageLevel {
+    fn from(value: &str) -> Self {
+        match value {
+            "FATAL" => MessageLevel::FATAL,
+            "ERROR" => MessageLevel::ERROR,
+            "WARN" => MessageLevel::WARN,
+            "INFO" => MessageLevel::INFO,
+            "DEBUG" => MessageLevel::DEBUG,
+            "TRACE" => MessageLevel::TRACE,
+            _ => {
+                let parts: Vec<&str> = value.splitn(1, '(').collect();
+                let value = &parts[1][..parts[1].len() - 1];
+                MessageLevel::CUSTOM(value.parse::<u16>().unwrap())
+            }
+
+        }
+    }
+}

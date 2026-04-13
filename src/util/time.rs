@@ -1,5 +1,6 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
+#[derive(Copy, Clone)]
 pub struct TimeStamp(u128);
 
 impl TimeStamp {
