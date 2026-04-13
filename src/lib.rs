@@ -74,15 +74,18 @@ pub fn init() {
     });
 }
 
+fn queue_message(message: Message) {
+    let queue = &MESSAGE_QUEUE.get().unwrap();
+    queue.lock().unwrap().push(message);
+}
+
 #[macro_export]
 macro_rules! fatal {
     ( $( $arg:tt )* ) => {{
         use crate::message::{Message, MessagePrefix, level::MessageLevel};
-        use crate::MESSAGE_QUEUE;
-        let queue = &MESSAGE_QUEUE.get().unwrap();
+        use crate::queue_message;
         let msg = format!($($arg)*);
-        let message = Message::new(MessageLevel::FATAL, msg, MessagePrefix::FATAL_PREFIX);
-        queue.lock().unwrap().push(message);
+        queue_message(Message::new(MessageLevel::FATAL, msg, MessagePrefix::FATAL_PREFIX));
     }};
 }
 
@@ -90,11 +93,9 @@ macro_rules! fatal {
 macro_rules! error {
     ( $( $arg:tt )* ) => {{
         use crate::message::{Message, MessagePrefix, level::MessageLevel};
-        use crate::MESSAGE_QUEUE;
-        let queue = &MESSAGE_QUEUE.get().unwrap();
+        use crate::queue_message;
         let msg = format!($($arg)*);
-        let message = Message::new(MessageLevel::ERROR, msg, MessagePrefix::ERROR_PREFIX);
-        queue.lock().unwrap().push(message);
+        queue_message(Message::new(MessageLevel::ERROR, msg, MessagePrefix::ERROR_PREFIX));
     }};
 }
 
@@ -102,11 +103,9 @@ macro_rules! error {
 macro_rules! warn {
     ( $( $arg:tt )* ) => {{
         use crate::message::{Message, MessagePrefix, level::MessageLevel};
-        use crate::MESSAGE_QUEUE;
-        let queue = &MESSAGE_QUEUE.get().unwrap();
+        use crate::queue_message;
         let msg = format!($($arg)*);
-        let message = Message::new(MessageLevel::WARN, msg, MessagePrefix::WARN_PREFIX);
-        queue.lock().unwrap().push(message);
+        queue_message(Message::new(MessageLevel::WARN, msg, MessagePrefix::WARN_PREFIX));
     }};
 }
 
@@ -114,11 +113,9 @@ macro_rules! warn {
 macro_rules! info {
     ( $( $arg:tt )* ) => {{
         use crate::message::{Message, MessagePrefix, level::MessageLevel};
-        use crate::MESSAGE_QUEUE;
-        let queue = &MESSAGE_QUEUE.get().unwrap();
+        use crate::queue_message;
         let msg = format!($($arg)*);
-        let message = Message::new(MessageLevel::INFO, msg, MessagePrefix::INFO_PREFIX);
-        queue.lock().unwrap().push(message);
+        queue_message(Message::new(MessageLevel::INFO, msg, MessagePrefix::INFO_PREFIX));
     }};
 }
 
@@ -126,11 +123,9 @@ macro_rules! info {
 macro_rules! debug {
     ( $( $arg:tt )* ) => {{
         use crate::message::{Message, MessagePrefix, level::MessageLevel};
-        use crate::MESSAGE_QUEUE;
-        let queue = &MESSAGE_QUEUE.get().unwrap();
+        use crate::queue_message;
         let msg = format!($($arg)*);
-        let message = Message::new(MessageLevel::DEBUG, msg, MessagePrefix::DEBUG_PREFIX);
-        queue.lock().unwrap().push(message);
+        queue_message(Message::new(MessageLevel::DEBUG, msg, MessagePrefix::DEBUG_PREFIX));
     }};
 }
 
@@ -138,11 +133,9 @@ macro_rules! debug {
 macro_rules! trace {
     ( $( $arg:tt )* ) => {{
         use crate::message::{Message, MessagePrefix, level::MessageLevel};
-        use crate::MESSAGE_QUEUE;
-        let queue = &MESSAGE_QUEUE.get().unwrap();
+        use crate::queue_message;
         let msg = format!($($arg)*);
-        let message = Message::new(MessageLevel::TRACE, msg, MessagePrefix::TRACE_PREFIX);
-        queue.lock().unwrap().push(message);
+        queue_message(Message::new(MessageLevel::TRACE, msg, MessagePrefix::TRACE_PREFIX));
     }};
 }
 
@@ -172,9 +165,8 @@ macro_rules! log {
             }
             MessageLevel::CUSTOM(_) => {
                 use crate::message::{Message};
-                use crate::MESSAGE_QUEUE;
-                let queue = &MESSAGE_QUEUE.get().unwrap();
-                queue.lock().unwrap().push(Message::new(level, message, prefix));
+                use crate::queue_message;
+                queue_message(Message::new(level, message, prefix));
             }
         }
     }};
