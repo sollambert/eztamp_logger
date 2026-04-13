@@ -11,8 +11,8 @@ Optional environment variables, these can be loaded into your deployment pipelin
 # Log level u16 equivalents are 500 | 400 | 300 | 200 | 100 | 1 | 0 if compared to the list above
 # Custom log calls exist with whatever value you desire that fits within a u16 for filtering
 RUST_LOG=TRACE # default = INFO
-# This is the salt used to hash the rolling checksums within the log file
-RUST_LOG_SALT=THISISABADSALT # default = ""
+# This is the secret used to hash the rolling checksums within the log file
+RUST_LOG_SECRET=THISISABADSECRET # default = ""
 # Output path for logging
 RUST_LOG_OUTPUT_FILE="./log.txt" # default = "./log.txt"
 # Bitmask that controls destination for log calls

@@ -1,8 +1,6 @@
 use std::fs::File;
 use std::io::{Read, Seek, SeekFrom, Write};
-use std::str::Lines;
 
-use sha2::digest::Output;
 use sha2::{Digest, Sha256};
 use hmac::{Hmac, KeyInit, Mac};
 
@@ -71,7 +69,7 @@ impl Logger {
 
                 // get secret
                 let secret = &self.secret;
-                let secret_str = secret.as_str();
+                let secret_str = Hex::encode(secret.as_bytes().bytes());
 
                 // extract prev mac
                 let parts: Vec<&str> = last_line.splitn(5, ';').collect();
@@ -105,8 +103,8 @@ impl Logger {
     }
 }
 
-pub(crate) fn verify_log(mut file: File, initial_key: String) -> Result<(), String> {
-    let mut prev_key = initial_key;
+pub fn verify_log(mut file: File, initial_key: String) -> Result<(), String> {
+    let mut prev_key = Hex::encode(initial_key.as_bytes().bytes());
     let mut prev_mac = Hex::decode("").unwrap();
     let mut buf = String::new();
     let _ = file.read_to_string(&mut buf);
